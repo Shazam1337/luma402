@@ -1,0 +1,24 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Мягкое свечение -->
+    <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00FFCC" />
+      <stop offset="40%" stop-color="#38F9E0" />
+      <stop offset="70%" stop-color="#8B7BFF" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </radialGradient>
+
+    <!-- Дополнительная тень -->
+    <filter id="orbBlur">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="64" cy="64" r="36" fill="url(#orbGlow)" filter="url(#orbBlur)" opacity="0.95"/>
+  <circle cx="64" cy="64" r="55" fill="none" stroke="url(#orbGlow)" stroke-width="1.5" opacity="0.25"/>
+</svg>
+

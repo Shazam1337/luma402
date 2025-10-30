@@ -378,7 +378,7 @@ function submitForm() {
       <div className="container grid main">
         <Panel title="SUBMIT POST & EARN">
           <Field label="Twitter Handle" placeholder="@username" value={form.handle} onChange={(v) => setForm({ ...form, handle: v })} />
-          <Field label="Tweet URL" placeholder="https://x.com/LUMA402" value={form.url} onChange={(v) => setForm({ ...form, url: v })} />
+          <Field label="Tweet URL" placeholder="https://x.com/run402_fun" value={form.url} onChange={(v) => setForm({ ...form, url: v })} />
           <Field label="Solana Wallet Address" placeholder="Enter your SOL address" value={form.wallet} onChange={(v) => setForm({ ...form, wallet: v })} />
           <div className="row">
             <button
