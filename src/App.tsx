@@ -1,4 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  ResponsiveContainer
+} from "recharts";
+
 
 declare global {
   interface Window {
@@ -41,6 +49,29 @@ const HANDLES = [
 export default function App() {
 
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
+const [showNotif, setShowNotif] = useState(false);
+
+    // --- Chart State (Live Post Growth) ---
+const [chartData, setChartData] = useState<{ time: string; posts: number }[]>([]);
+const [totalPosts, setTotalPosts] = useState(0);
+
+useEffect(() => {
+  let start = Date.now();
+  const iv = setInterval(() => {
+    setTotalPosts((prev) => {
+      const next = prev + randint(1, 2); // плавный рост
+      const elapsed = Math.floor((Date.now() - start) / 1000); // сек с начала
+      const label = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, "0")}`; // время в мин:сек
+      setChartData((prevData) => {
+        const updated = [...prevData, { time: label, posts: next }].slice(-60); // последние 60 точек (≈ час)
+        return updated;
+      });
+      return next;
+    });
+  }, randint(500, 1000)); // обновление каждые 0.5–1 сек
+  return () => clearInterval(iv);
+}, []);
+
 
 async function connectPhantom() {
   const provider = window.solana;
@@ -102,15 +133,27 @@ async function connectPhantom() {
   const [form, setForm] = useState({ handle: "", url: "", wallet: "" });
 
   // --- Actions ---
-  function submitForm() {
-    if (!form.handle || !form.url || !form.wallet) {
-      pushLog("[err] missing fields — handle, url, wallet");
-      return;
-    }
-    newPending(form.handle);
-    pushLog(`[info] submit: queued ${form.handle} → ${form.url}`);
-    setForm({ handle: "", url: "", wallet: "" });
+function submitForm() {
+  if (!form.handle || !form.url || !form.wallet) {
+    pushLog("[err] missing fields — handle, url, wallet");
+    return;
   }
+
+  newPending(form.handle);
+  pushLog(`[info] submit: queued ${form.handle} → ${form.url}`);
+
+  // показать уведомление
+  setShowNotif(true);
+
+  // скрыть через 4 секунды
+  setTimeout(() => {
+    setShowNotif(false);
+  }, 4000);
+
+  setForm({ handle: "", url: "", wallet: "" });
+}
+
+
 
   function newPending(handle?: string) {
     const id = Math.random().toString(36).slice(2, 8);
@@ -242,59 +285,86 @@ async function connectPhantom() {
       {/* Header bar */}
       {/* Header bar */}
 
-<div className="bar">
-  <div className="brand">
-  <svg width="120" height="40" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg">
-    <rect width="180" height="60" fill="none"/>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2.5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    <text x="10" y="42" fill="#00ffc3" font-family="ui-monospace, monospace" font-size="38" font-weight="600" letter-spacing="2" filter="url(#glow)">
-      &gt;_402
-    </text>
-  </svg>
+<div className="bar new-bar">
+  <div className="left">
+    <div className="logo">
+  <div className="orb">
+    <svg width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="orbGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#00ff9c" />
+          <stop offset="50%" stopColor="#4ae8ff" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </radialGradient>
+      </defs>
+      <circle cx="50" cy="50" r="30" fill="url(#orbGlow)" opacity="0.95" />
+    </svg>
+  </div>
+  <span className="brand-text">LUMA402</span>
 </div>
 
+  </div>
 
-  <div className="header-actions">
-    <a
-      href="https://x.com/run402_fun"
+  <div className="right">
+       <a
+      href="https://x.com/LUMA402"
       target="_blank"
       rel="noopener noreferrer"
       className="x-link"
       title="Follow us on X"
     >
-      <svg width="20" height="20" viewBox="0 0 1200 1227" fill="#00ffc3" xmlns="http://www.w3.org/2000/svg">
-        <path d="M714.163 519.284L1160.89 0H1058.44L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H102.443L514.601 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM568.931 687.828L520.031 618.918L139.418 79.6943H306.615L613.819 519.284L662.719 588.194L1058.47 1146.68H891.271L568.931 687.828Z"/>
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 1200 1227"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="url(#xGradient)"
+      >
+        <defs>
+          <linearGradient id="xGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#00FF9C" />
+            <stop offset="100%" stopColor="#A855F7" />
+          </linearGradient>
+        </defs>
+        <path d="M714.163 519.284L1160.89 0H1058.44L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H102.443L514.601 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM568.931 687.828L520.031 618.918L139.418 79.6943H306.615L613.819 519.284L662.719 588.194L1058.47 1146.68H891.271L568.931 687.828Z" />
       </svg>
     </a>
-
     <button className="connect-btn" onClick={connectPhantom}>
-      {walletAddress ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : "Connect Phantom"}
+      {walletAddress
+        ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
+        : "Connect Phantom"}
     </button>
-
     <div className="status">
-      SYSTEM: <b>ONLINE</b>{" "}
+      <span className="sys">SYSTEM:</span>
+      <b>ONLINE</b>
       <span className={heartbeat ? "dot on" : "dot"}>●</span>
     </div>
   </div>
 </div>
 
 
-      {/* Hero prompt */}
-      <div className="container prompt">
-        <div className="line">
-          <span className="path">/402</span>
-          <span className="gt">$</span>
-          <span className="cmd"> Run402 "Turning Attention into Value"</span>
-          <span className="caret">▉</span>
-        </div>
-        <div className="output">Run402 — attention-to-earn layer on Solana. Pay with actions. Earn instantly.</div>
-      </div>
+
+
+
+        <div className="sidebar-intro">
+  <div className="intro-card">
+    <h2>$LUMA402</h2>
+    <p>
+      The attention-to-light (earn) layer on <b>Solana backed by 402</b>.
+      Every signal — a transaction of focus,
+      every mention — a transfer of light.
+    </p>
+    <p>
+      LUMA transforms user attention into measurable value.
+      Each interaction powers the network —
+      creating a decentralized economy of motion and intent.
+    </p>
+    <p className="motto">Turn Attention into Light.</p>
+  </div>
+
+</div>
+
+
 
       {/* KPI Row */}
       <div className="container grid kpi">
@@ -306,34 +376,84 @@ async function connectPhantom() {
 
       {/* Main Row */}
       <div className="container grid main">
-        <Panel title="SUBMIT RATIO">
+        <Panel title="SUBMIT POST & EARN">
           <Field label="Twitter Handle" placeholder="@username" value={form.handle} onChange={(v) => setForm({ ...form, handle: v })} />
-          <Field label="Tweet URL" placeholder="https://x.com/run402_fun" value={form.url} onChange={(v) => setForm({ ...form, url: v })} />
+          <Field label="Tweet URL" placeholder="https://x.com/LUMA402" value={form.url} onChange={(v) => setForm({ ...form, url: v })} />
           <Field label="Solana Wallet Address" placeholder="Enter your SOL address" value={form.wallet} onChange={(v) => setForm({ ...form, wallet: v })} />
           <div className="row">
-            <button className="btn" onClick={submitForm}>[ submit ]</button>
+            <button
+  type="button"
+  className="btn"
+  onClick={(e) => {
+    e.preventDefault();
+    submitForm();
+  }}
+>
+  submit
+</button>
+
           </div>
           <ul className="req">
-            <li>must mention CA or $RATIO in tweet</li>
+            <li>must mention CA or $LUMA402 in tweet</li>
             <li>verification runs every ~1 minute</li>
-            <li>payment sent automatically via creator fees</li>
+            <li>payment sent automatically via creator fees by 402</li>
           </ul>
+
+             {/* ГРАФИК ПОД ФОРМОЙ */}
+  <div className="chart-box" style={{ marginTop: "20px" }}>
+  <div className="chart-header">
+    <div className="chart-title">POST COUNT by 402</div>
+    <div className="chart-value">{totalPosts}</div>
+  </div>
+
+  <ResponsiveContainer width="100%" height={180}>
+    <LineChart data={chartData}>
+      <XAxis dataKey="time" tick={{ fill: "#88bba4", fontSize: 10 }} />
+      <YAxis hide domain={["auto", "auto"]} />
+      <Line
+        type="monotone"
+        dataKey="posts"
+        stroke="#00ff9c"
+        strokeWidth={2}
+        dot={false}
+        isAnimationActive={false}
+        animationDuration={400}
+        animationEasing="linear"
+      />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
+
+
         </Panel>
 
-        <Panel title="RECENT RATIOS">
-          <table className="table">
-            <thead>
-              <tr><th>handle</th><th>status</th><th className="tr">reward</th></tr>
-            </thead>
-            <tbody>
-              {recent.map((r) => (
-                <tr key={r.id}><td>{r.handle}</td><td className={r.status === "Paid" ? "ok" : ""}>{r.status}</td><td className="tr">+{r.sol.toFixed(4)} SOL</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </Panel>
 
-        <Panel title="TOP RAIDERS">
+
+        <Panel title="RECENT PAID POSTS">
+  <div className="table-wrapper">
+    <table className="table">
+      <thead>
+        <tr>
+          <th>HANDLE</th>
+          <th>STATUS</th>
+          <th className="tr">REWARD</th>
+        </tr>
+      </thead>
+      <tbody>
+        {recent.map((r) => (
+          <tr key={r.id}>
+            <td>{r.handle}</td>
+            <td className={r.status === "Paid" ? "ok" : ""}>{r.status}</td>
+            <td className="tr">+{r.sol.toFixed(4)} SOL</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</Panel>
+
+
+        <Panel title="TOP 5 POSTERS">
           <table className="table">
             <thead><tr><th>#</th><th>handle</th><th className="tr">total (SOL)</th></tr></thead>
             <tbody>
@@ -345,27 +465,51 @@ async function connectPhantom() {
 
       {/* Lower Row (equal heights) */}
       <div className="container grid foot">
-        <Panel title="PENDING VERIFICATIONS">
-          <ul ref={pendingRef} className="pending">
-            {pending.map((p) => (
-              <li key={p.id}><span className="ok">●</span> {p.handle} — <span className="dim">{p.status}</span> <span className="barp"><i style={{ width: p.progress + "%" }} /></span> {p.progress}%</li>
-            ))}
-            {!pending.length && <li className="dim">no pending submissions</li>}
-          </ul>
-        </Panel>
+          <Panel title="PENDING VERIFICATIONS">
+  <div className="scrollable">
+    <ul ref={pendingRef} className="pending">
+      {pending.map((p) => (
+        <li key={p.id}>
+          <span className="ok">●</span> {p.handle} —
+          <span className="dim">{p.status}</span>
+          <span className="barp">
+            <i style={{ width: p.progress + "%" }} />
+          </span>
+          {p.progress}%
+        </li>
+      ))}
+      {!pending.length && <li className="dim">no pending submissions</li>}
+    </ul>
+  </div>
+</Panel>
+
 
         <Panel title="FEE CLAIMS">
-          <ul className="claims">
-            {claims.map((c) => (<li key={c.id}><b>{c.sol.toFixed(6)} SOL</b> <span className="dim">— {c.ts}</span></li>))}
-          </ul>
-        </Panel>
+  <div className="scrollable">
+    <ul className="claims">
+      {claims.map((c) => (
+        <li key={c.id}>
+          <b>{c.sol.toFixed(6)} SOL</b> <span className="dim">— {c.ts}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Panel>
+
 
         <Panel title="SYSTEM LOG">
-          <pre ref={logRef} className="log">{log.join("\n")}</pre>
-        </Panel>
+  <div className="scrollable">
+    <pre ref={logRef} className="log">{log.join("\n")}</pre>
+  </div>
+</Panel>
+{showNotif && (
+  <div className="notif">
+    verification in pending...
+  </div>
+)}
       </div>
 
-      <div className="footer container">© {new Date().getFullYear()} 402 Network — terminal edition</div>
+      <div className="footer container">© {new Date().getFullYear()} LUMA402  —  Attention-to-Light</div>
     </div>
   );
 }
@@ -398,157 +542,483 @@ function Field({ label, placeholder, value, onChange }: { label: string; placeho
 
 // --- CSS ---
 const css = `
-  :root{ --bg:#050a07; --fg:#ccffd9; --dim:#75a38a; --ok:#3cff8f; --err:#ff5c5c; --line:#1a2a22; --edge:#244a3a; --glow:#1aff80; }
-  .term-root{ background: radial-gradient(1200px 600px at 50% -10%, #08130e 0%, transparent 60%), var(--bg); color: var(--fg); min-height:100vh; font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
-  .container{ max-width:1200px; margin:0 auto; padding:0 16px; }
-  .bar{ position:sticky; top:0; z-index:50; background:linear-gradient(to bottom, rgba(0,0,0,.6), rgba(0,0,0,.25)); backdrop-filter: blur(6px); border-bottom: 1px solid var(--edge); display:flex; align-items:center; justify-content:space-between; padding:10px 16px; }
-  .brand{ letter-spacing:.2em; color:#baf7d3; }
-  .status b{ color: var(--ok); }
-  .status .dot{ margin-left:8px; color:#3a8f6d; transition: color .25s ease }
-  .status .dot.on{ color:#3cff8f; text-shadow: 0 0 8px rgba(60,255,143,.6) }
-
-  .prompt{ padding:24px 0 8px; }
-  .line{ display:flex; gap:8px; align-items:center; white-space:nowrap; overflow:auto; }
-  .path{ color:#8ee0b4; }
-  .gt{ color:#4dffae; }
-  .cmd{ color:#c2ffe1; }
-  .caret{ color:#8bffbf; margin-left:6px; animation: caretBlink 1.2s infinite }
-  @keyframes caretBlink{ 0%,100%{opacity:1} 50%{opacity:.2} }
-  .output{ margin-top:8px; color:#a6d8bf }
-
-  .grid{ display:grid; gap:12px; }
-  .kpi{ grid-template-columns: repeat(4, 1fr); padding: 12px 0 8px; }
-  .main{ grid-template-columns: 1.1fr 1fr 0.9fr; padding: 8px 0; }
-  .foot{ grid-template-columns: 1.1fr 0.9fr 1fr; padding: 8px 0 24px; align-items: stretch; }
-
-  .box{ border:1px solid var(--edge); background: rgba(10,20,16,.35); box-shadow: inset 0 0 0 1px rgba(115,255,186,.06), 0 0 40px rgba(26,255,128,.06); padding:14px; border-radius:8px; }
-  .box .title{ color: var(--dim); font-size:12px; letter-spacing:.08em }
-  .box .val{ margin-top:6px; font-size:22px; color:#dfffea; text-shadow: 0 0 12px rgba(26,255,128,.18) }
-
-  .panel{ border:1px solid var(--edge); background: rgba(8,18,14,.35); border-radius:8px; box-shadow: inset 0 0 0 1px rgba(115,255,186,.06), 0 0 40px rgba(26,255,128,.05); display:flex; flex-direction:column; height:100%; }
-  .panel-title{ padding:10px 12px; border-bottom:1px solid var(--edge); color:#b6f7d0; letter-spacing:.12em }
-  .panel-body{ padding:12px; flex:1; display:flex; flex-direction:column; }
-
-  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px }
-  .lab{ color: var(--dim) }
-  input{ background: rgba(0,0,0,.35); border:1px solid var(--edge); border-radius:6px; color:var(--fg); padding:10px 12px; outline:none; box-shadow: inset 0 0 0 1px rgba(26,255,128,.06); }
-  input:focus{ border-color:#39f2a6; box-shadow: 0 0 0 2px rgba(57,242,166,.25) }
-  .row{ display:flex; align-items:center; gap:10px; }
-  .btn{ background: rgba(0,0,0,.45); color:#d6ffe9; border:1px solid #3cff8f; padding:8px 14px; border-radius:6px; text-transform:lowercase; letter-spacing:.08em; cursor:pointer; }
-  .btn:hover{ box-shadow: 0 0 18px rgba(60,255,143,.25); transform: translateY(-1px) }
-
-  .req{ list-style:none; margin:10px 0 0; padding:0; color: var(--dim) }
-  .req li{ margin:2px 0 }
-
-  .table{ width:100%; border-collapse: separate; border-spacing:0; }
-  .table thead th{ font-weight:600; color:#b2f0ce; border-bottom:1px solid var(--edge); padding:8px 6px; }
-  .table td{ padding:8px 6px; border-bottom:1px dashed #1d3329; }
-  .tr{ text-align:right }
-  .ok{ color: var(--ok) }
-  .dim{ color: var(--dim) }
-
-.brand svg text {
-  animation: blink 1.2s step-end infinite;
+:root {
+  --bg: #f6fbff;
+  --fg: #111;
+  --dim: #555;
+  --ok: #00a86b;
+  --err: #ff5c5c;
+  --line: #e6e9ec;
+  --edge: rgba(0,0,0,0.06);
+  --glow1: #00ff9c;
+  --glow2: #a855f7;
 }
 
-@keyframes blink {
-  50% {
-    fill: rgba(0, 255, 195, 0.4);
-    text-shadow: none;
-  }
+.term-root {
+  background: linear-gradient(180deg, #f9fbfc 0%, #eef3f6 100%);
+  color: #222;
+  min-height: 100vh;
+  font: 15px/1.45 "Inter", ui-sans-serif, system-ui;
 }
 
 
-  .pending {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
-  max-height: 420px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  scrollbar-width: thin;
-  scrollbar-color: #1aff80 transparent;
+.container {
+  max-width: 1600px; /* было 1200px */
+  margin: 0 auto;
+  padding: 0 32px; /* больше воздуха по бокам */
 }
 
-.pending li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px dashed #1d3329;
-  flex-shrink: 0; /* <<< ключевой момент */
-}
-
-  .pending li{ display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px dashed #1d3329; }
-  .barp{ flex:1; height:8px; background:rgba(0,0,0,.4); border:1px solid var(--edge); border-radius:4px; margin:0 8px }
-  .barp i{ display:block; height:100%; background: linear-gradient(90deg, #1aff80, #21c9ff); box-shadow: 0 0 14px rgba(26,255,128,.3) inset; border-radius:3px }
-
-  .claims{ list-style:none; padding:0; margin:0; flex:1; max-height:420px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#1aff80 transparent; }
-  .claims li{ padding:6px 0; border-bottom:1px dashed #1d3329; }
-
-  .log{ color:#a3e6c5; white-space:pre-wrap; flex:1; max-height:420px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#1aff80 transparent; }
-
-  .footer{ padding:12px 0 30px; color:#8fc7ad; border-top:1px solid var(--edge) }
-
-  .fadein{ animation: fadeIn .5s ease both }
-  @keyframes fadeIn{ from{ opacity:0; transform: translateY(4px) } to{ opacity:1; transform:none } }
-
-  @media (max-width: 1080px){ .main{ grid-template-columns: 1fr; } .foot{ grid-template-columns: 1fr; } .kpi{ grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 640px){ .kpi{ grid-template-columns: 1fr; } }
-  html, body {
-  margin: 0;
-  padding: 0;
-  background: #050a07;
-  color: #ccffd9;
-  height: 100%;
-}
-body {
-  overflow-x: hidden;
-}
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.connect-btn {
-  background: transparent;
-  color: #00ffc3;
-  border: 1px solid #00ffc3;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.connect-btn:hover {
-  background: #00ffc3;
-  color: #000;
-}
-
-.x-link svg {
-  transition: transform 0.2s ease;
-}
-.x-link:hover svg {
-  transform: scale(1.15);
-}
-
-.top ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
-  max-height: none; /* убираем ограничение */
-  overflow-y: visible; /* разрешаем показывать весь список */
-}
-
-.top li {
+/* ─ Header ─ */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--edge);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px dashed #1d3329;
+  padding: 10px 16px;
+}
+.brand { letter-spacing:.15em; color: #111; }
+.status b { color: var(--ok); }
+.status .dot { margin-left:8px; color:#aaa; transition: color .25s ease; }
+.status .dot.on { color: var(--ok); text-shadow:0 0 6px rgba(0,168,107,.4); }
+
+/* ─ Layout ─ */
+.prompt { padding:24px 0 8px; color:#444; }
+.line { display:flex; gap:8px; align-items:center; white-space:nowrap; overflow:auto; }
+.path { color:#777; }
+.gt { color:#00a86b; }
+.cmd { color:#222; font-weight:500; }
+.caret { color:#888; margin-left:6px; animation: caretBlink 1.2s infinite; }
+@keyframes caretBlink { 0%,100%{opacity:1;} 50%{opacity:.2;} }
+
+.grid { display:grid; gap:18px; }
+.kpi { grid-template-columns:repeat(4,1fr); padding:18px 0 8px; }
+.main { grid-template-columns:1.1fr 1fr 0.9fr; padding:10px 0; }
+.foot { grid-template-columns:1.1fr 0.9fr 1fr; padding:10px 0 40px; align-items:stretch; }
+
+/* ─ Boxes & panels ─ */
+.box, .panel {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid var(--edge);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+  backdrop-filter: blur(12px);
+  color: var(--fg);
+}
+.box { padding:14px; }
+.box .title { color: var(--dim); font-size:12px; letter-spacing:.08em; }
+.box .val { margin-top:6px; font-size:26px; font-weight:600; background: linear-gradient(90deg,var(--glow1),var(--glow2)); -webkit-background-clip:text; color:transparent; }
+
+.panel { display:flex; flex-direction:column; height:100%; }
+.panel-title {
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  color:#333;
+  font-weight:600;
+  letter-spacing:.08em;
+}
+.panel-body { padding:12px; flex:1; display:flex; flex-direction:column; }
+
+/* ─ Forms ─ */
+.field { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.lab { color: var(--dim); }
+input {
+  background: rgba(255,255,255,0.8);
+  border:1px solid var(--edge);
+  border-radius:10px;
+  color:#111;
+  padding:10px 12px;
+  outline:none;
+}
+input:focus {
+  border-color: var(--glow2);
+  box-shadow: 0 0 0 2px rgba(168,85,247,0.25);
+}
+.row { display:flex; align-items:center; gap:10px; }
+.btn {
+  background: linear-gradient(90deg,var(--glow1),var(--glow2));
+  color:white;
+  border:none;
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:.25s;
+}
+.btn:hover { opacity:.85; transform:translateY(-1px); }
+
+.req { list-style:none; margin:10px 0 0; padding:0; color:var(--dim); }
+.req li { margin:2px 0; }
+
+/* ─ Tables ─ */
+.table { width:100%; border-collapse:separate; border-spacing:0; }
+.table th {
+  font-weight:600;
+  color:#333;
+  border-bottom:1px solid var(--line);
+  padding:8px 6px;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.table td {
+  padding:10px 8px;
+  border-bottom:1px solid var(--line);
+}
+.tr { text-align:right; }
+.ok { color: var(--ok); font-weight:600; }
+.dim { color: var(--dim); }
+
+/* ─ Progress bars, claims, logs ─ */
+.pending li, .claims li {
+  display:flex; align-items:center; gap:8px;
+  padding:6px 0; border-bottom:1px solid var(--line);
+}
+.barp {
+  flex:1; height:8px; background:rgba(0,0,0,.06);
+  border-radius:4px; margin:0 8px; overflow:hidden;
+}
+.barp i {
+  display:block; height:100%;
+  background:linear-gradient(90deg,var(--glow1),var(--glow2));
+  border-radius:3px;
 }
 
+.log {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding:10px;
+  color:#333;
+  font-size:12px;
+  line-height:1.4;
+  white-space:pre-wrap;
+  overflow:auto;
+}
+
+.footer {
+  padding:12px 0 30px;
+  color:#777;
+  border-top:1px solid var(--line);
+  text-align:center;
+  font-size:13px;
+  margin-top:24px;
+}
+
+@media (max-width:1080px){
+  .main{grid-template-columns:1fr;}
+  .foot{grid-template-columns:1fr;}
+  .kpi{grid-template-columns:1fr 1fr;}
+}
+@media (max-width:640px){ .kpi{grid-template-columns:1fr;} }
+/* === LUMA402 HEADER === */
+.new-bar .right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* --- X (Twitter) icon --- */
+.new-bar .x-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08), 0 0 10px rgba(0, 255, 156, 0.2);
+  transition: all 0.25s ease;
+}
+.new-bar .x-link:hover {
+  transform: translateY(-2px) scale(1.12);
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.4),
+              0 0 8px rgba(0, 255, 156, 0.4);
+}
+.new-bar .x-link svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 0 4px rgba(0,255,156,0.5));
+}
+
+/* --- Connect Phantom button --- */
+.new-bar .connect-btn {
+  background: white;
+  color: #333;
+  border: 2px solid transparent;
+  background-image: linear-gradient(#fff, #fff),
+    linear-gradient(90deg, #00ff9c, #a855f7);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.new-bar .connect-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.25);
+}
+
+/* --- Status text --- */
+.new-bar .status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #777;
+  margin-left: 6px;
+  font-family: "Space Grotesk", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.new-bar .status b {
+  color: #00b97f;
+  font-weight: 600;
+}
+.new-bar .status .dot {
+  font-size: 12px;
+  color: #bbb;
+}
+.new-bar .status .dot.on {
+  color: #00ff9c;
+  text-shadow: 0 0 6px rgba(0,255,156,0.6);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo .orb {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: orbPulse 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(82, 255, 206, 0.6));
+}
+
+@keyframes orbPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(82, 255, 206, 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 22px rgba(168, 85, 247, 0.5));
+  }
+}
+
+.brand-text {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: #1a1a1a;
+  background: linear-gradient(90deg, #00ff9c, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 12px rgba(82, 255, 206, 0.15);
+}
+/* --- Sidebar intro block --- */
+.sidebar-intro {
+  position: absolute;
+  top: 120px;
+  left: 40px;
+  width: 300px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  color: #1a1a1a;
+}
+
+.intro-card h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #00ff9c, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+
+.intro-card p {
+  font-size: 15px;
+  line-height: 1.55;
+  margin: 10px 0;
+  color: #333;
+}
+
+.intro-card .motto {
+  margin-top: 18px;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+  color: #00b97f;
+  text-transform: uppercase;
+}
+/* --- Token badge --- */
+.token-badge {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ticker {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #00ff9c;
+  text-shadow:
+    0 0 8px rgba(0, 255, 156, 0.5),
+    0 0 14px rgba(168, 85, 247, 0.4);
+  animation: tickerPulse 2.4s ease-in-out infinite;
+  cursor: default;
+  background: linear-gradient(90deg, #00ff9c, #4ae8ff, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes tickerPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(0, 255, 156, 0.3));
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 18px rgba(168, 85, 247, 0.6));
+    opacity: 1;
+  }
+}
+.intro-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* центрирует весь контент по горизонтали */
+  text-align: center; /* выравнивает текст */
+}
+
+.intro-card h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: linear-gradient(90deg, #00ff9c, #4ae8ff, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 16px;
+  animation: tickerSimplePulse 2.8s ease-in-out infinite;
+  text-align: center;
+}
+
+@keyframes tickerSimplePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+/* --- Scrollable table area --- */
+.table-wrapper {
+  max-height: 720px; /* ограничение по высоте под ~20 записей */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 156, 0.4) transparent;
+}
+
+.table-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00ff9c, #a855f7);
+  border-radius: 3px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* --- Scrollable lower panels (pending, claims, logs) --- */
+.scrollable {
+  max-height: 420px; /* одинаковая высота для всех трёх панелей */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 156, 0.4) transparent;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollable::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #00ff9c, #a855f7);
+  border-radius: 3px;
+}
+.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chart-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.chart-title {
+  color: var(--fg);
+  font-size: 16px;
+  letter-spacing: 0.05em;
+}
+
+.chart-value {
+  color: #00ffc3;
+  font-weight: 600;
+  font-size: 28px;
+  font-family: ui-monospace, monospace;
+}
+
+.notif {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  background: rgba(0, 255, 195, 0.1);
+  border: 1px solid #00ffc3;
+  color: #00ffc3;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 20px rgba(0,255,195,0.15);
+  animation: fadeInOut 4s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(10px); }
+  10%, 90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(10px); }
+}
+
+.notif-caret {
+  margin-right: 6px;
+  color: #00ffc3;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+
 `;
+
